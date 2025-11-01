@@ -1,0 +1,7 @@
+The first 10 digits of Pi are 3.1415926535
+Time to calculate Pi serially with 500000000 steps is: 1.46177
+Pi is 3.1415926211
+Time to calculate Pi in // with 500000000 steps is: 0.487452
+Pi is 3.1415926536
+Time to calculate Pi in // with 500000000 guesses is: 0.783019
+Pi is 3.1415777680
