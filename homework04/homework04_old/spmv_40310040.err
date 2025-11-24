@@ -1,0 +1,1 @@
+CUDA error at spmv.cu:65 code=700(cudaErrorIllegalAddress) "cudaEventRecord(stop, 0)" 

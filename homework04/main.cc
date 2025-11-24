@@ -660,18 +660,18 @@ void convert_csr_to_ell(unsigned int* csr_row_ptr, unsigned int* csr_col_ind,
     }
     //print_ell(*ell_col_ind, *ell_vals, m, max_nnz);
     
-    #pragma omp parallel for
+    #pragma omp parallel for schedule(static)
     for (int row = 0; row < m; row++) {
         unsigned int row_start = csr_row_ptr[row];
         unsigned int row_end = csr_row_ptr[row + 1];
         unsigned int row_nnz = row_end - row_start;
-        
-        for (unsigned int k = 0; k < row_nnz; k++) {
-            int ell_index = row + k * m;
-            int csr_index = row_start + k;
+        int i = 0;
+        for (unsigned int k = row_start; k < row_nnz; ++k) {
+            int ell_index = row * k + i;
+            int csr_index = k;
             
             (*ell_col_ind)[ell_index] = csr_col_ind[csr_index];
-            (*ell_vals)[ell_index] = csr_vals[csr_index];
+            (*ell_vals)[ell_index] = csr_vals[csr_index];i++;
         }
     }
 

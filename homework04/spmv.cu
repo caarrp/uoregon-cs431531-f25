@@ -14,27 +14,47 @@ spmv_kernel_ell(unsigned int* col_ind, T* vals, int m, int n, int nnz,
 {
 
     // COMPLETE THIS FUNCTION
-   int row = blockIdx.x * blockDim.x + threadIdx.x;
-    //then say row = (block 0 * 256 threads) + thread 2 = row 2
-    if (row > m && row >= m){//checking if row is in bounds
-	T sum = 0.0;
+   unsigned int row = blockIdx.x;
+   unsigned int dim = blockDim.x; 
+   unsigned int tid = threadIdx.x;
+   unsigned int global_r = row*dim + tid;
+    
+   extern __shared__ double temp[];
+   
+   if (row < (unsigned int)m){//checking if row is in bounds
+	double sum = 0.0;
     	//b[row] = 0.0;
 	//accuumulator = 0
-	for (int k = 0; k < nnz; k++) {
-            int index = row + k * m;
 
-            unsigned int col = col_ind[index];
+	unsigned int row_start = row * n;
+	unsigned int row_end = row + n;
 
-            if (col < n){
-                sum += vals[index] * x[col];
+	for (unsigned int k = row_start + tid; k < row_end; k+= dim) {
+            //int index = row + k * m;
+
+            unsigned int col = col_ind[k];
+
+            if (col != (unsigned int)n){
+                sum += vals[k] * x[col];
             }
         }
+	temp[tid] = sum;
+	__syncthreads();
+	//b[row] = 0.0;
 
-	if (row < m){
-            b[row] = 0.0;
-	}
+	for (unsigned int j = dim/2; j > 0; j >>= 1){
+		//reduction for the threads that did ta opertaions
+	    if (tid > j){
+	        unsigned int s = tid + j;
+		temp[tid] += temp[s];}
+
+	    __syncthreads();
+
+	    if (tid == 0){
+		    //only the one taht has the final sum, 
+		b[row] = temp[0];}
     }
-}
+}}
 
 
 
@@ -188,25 +208,43 @@ spmv_kernel(unsigned int* row_ptr, unsigned int* col_ind, T* vals,
             int m, int n, int nnz, double* x, double* b)
 {
     // COMPLETE THIS FUNCTION
-    int row = blockIdx.x * blockDim.x + threadIdx.x;
+    unsigned int row = blockIdx.x;
+    unsigned int dim = blockDim.x;
+    unsigned int tid = threadIdx.x;
+    unsigned int global_r = row*dim + tid;
 
-    if (row < m) {
-        T sum = 0.0;
+    extern __shared__ double temp[];
+
+
+    if (row < (unsigned int)m) {
+        double sum = 0.0;
 	
-    	b[row] = 0.0;
+    	//b[row] = 0.0;
         unsigned int row_start = row_ptr[row];
         unsigned int row_end = row_ptr[row + 1];
 
-        for (unsigned int j = row_start; j < row_end; j++) {
-	
-	unsigned int col_index = col_ind[j];
+        for (unsigned int j = row_start + tid; j < row_end; j+= dim) {
+
+		unsigned int col_index = col_ind[j];
 		
-	if (col_index < (unsigned int)n) {
-            sum += vals[j] * x[col_ind[j]];
-	}}
+		if (col_index < (unsigned int)n) {
+            	sum += vals[j] * x[col_index];
+		}
+	}
+
+	temp[tid] = sum;
 	
-	if (row < m){
-            b[row] = sum;
+	//reducigng here
+	for (unsigned int k = (dim / 2) ; k > 0; k>>=1){
+	
+	    if (tid < k) {
+	        unsigned int s = tid + k;
+                temp[tid] += temp[s];
+		}
+	    __syncthreads();
+	}
+	if (tid == 0){
+	    b[row] = temp[0];
 	}
     }
 }
