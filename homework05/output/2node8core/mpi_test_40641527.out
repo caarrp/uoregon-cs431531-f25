@@ -1,0 +1,26 @@
+-----------------------------------------------------
+Matrix name:     cant/cant.mtx
+Matrix size:     62451 x 62451 => 2034917
+-----------------------------------------------------
+Is matrix:       1
+Is sparse:       1
+-----------------------------------------------------
+Is complex:      0
+Is real:         1
+Is integer:      0
+Is pattern only: 0
+-----------------------------------------------------
+Is general:      0
+Is symmetric:    1
+Is skewed:       0
+Is hermitian:    0
+-----------------------------------------------------
+Matrix file name: cant/cant.mtx ... file loaded.
+Module		Time
+Load		0.707737
+Vec Bcast	0.000916
+Mat Scatter	0.023860
+Lock Init	0.000341
+COO SpMV	0.257189
+Res Reduce	0.007464
+Store		0.023434
